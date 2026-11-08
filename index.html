@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10151b">
+<meta name="description" content="Ein einfacher, lokaler Tabata-Intervalltimer.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>Tabata Timer</title>
+<style>
+:root{color-scheme:dark;--bg:#10151b;--panel:#1a222b;--muted:#91a0ad;--green:#78e08f;--orange:#ffb454;--purple:#b69cff;--cyan:#6dd5ed}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{width:min(100%,560px);margin:auto;padding:calc(22px + env(safe-area-inset-top)) 18px calc(28px + env(safe-area-inset-bottom))}
+header{text-align:center;margin:8px 0 24px}header .logo{font-size:34px;color:var(--green)}h1{font-size:27px;letter-spacing:3px;margin:4px 0}header p{color:var(--muted);font-size:11px;letter-spacing:2px;margin:0}
+.panel{background:var(--panel);border:1px solid #29333e;border-radius:22px;padding:18px;margin:16px 0}.section-title{font-size:11px;letter-spacing:1.5px;color:var(--muted);font-weight:800;margin-bottom:12px}
+.setting{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #303a44}.setting:last-of-type{border:0}.setting strong{display:block;font-size:15px}.setting small{color:var(--muted);font-size:12px}
+.step{border:0;background:#2a3540;color:white;width:36px;height:36px;border-radius:50%;font-size:20px}.value{min-width:38px;text-align:center;font-size:21px;font-weight:800;font-variant-numeric:tabular-nums}
+.total{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;padding-top:14px}.total b{color:white}
+.timer{padding:22px 14px;text-align:center}.phase{font-weight:900;letter-spacing:2px;color:var(--green);font-size:16px}
+.ring{width:min(74vw,290px);height:min(74vw,290px);margin:20px auto;display:grid;place-items:center;border-radius:50%;background:conic-gradient(var(--accent,var(--green)) var(--progress,0%),#303a44 0);position:relative}.ring:before{content:"";position:absolute;inset:11px;border-radius:50%;background:var(--panel)}
+.clock{position:relative;font-size:clamp(52px,15vw,70px);font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-2px}.clock small{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);margin-top:3px}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;gap:8px}button{cursor:pointer;touch-action:manipulation}.primary{flex:1;border:0;border-radius:17px;padding:17px;background:var(--green);color:#102017;font-size:16px;font-weight:800}.secondary{border:1px solid #3a4652;border-radius:17px;background:#222c36;color:white;min-width:58px;font-size:18px}
+.controls{display:flex;gap:10px;margin:16px 0}.hint{text-align:center;color:var(--muted);font-size:12px;line-height:1.5;margin-top:14px}.hidden{display:none!important}
+.options{display:flex;align-items:center;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:12px}.options input{accent-color:var(--green);width:18px;height:18px}footer{text-align:center;color:#65727d;font-size:11px;margin:22px 0 4px}
+.status{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:var(--muted);margin-top:10px}.dot{width:7px;height:7px;border-radius:50%;background:var(--green)}
+</style>
+</head>
+<body><main>
+<header><div class="logo">◷</div><h1>TABATA</h1><p>DEIN INTERVALL-TIMER</p></header>
+<section id="setup">
+<div class="panel"><div class="section-title">DEIN TRAINING</div>
+<div class="setting"><div><strong>Trainingszeit</strong><small>Sekunden pro Arbeitssatz</small></div><button class="step" data-key="work" data-delta="-1">−</button><span class="value" id="workVal">20</span><button class="step" data-key="work" data-delta="1">+</button></div>
+<div class="setting"><div><strong>Pausenzeit</strong><small>Sekunden zwischen Arbeitssätzen</small></div><button class="step" data-key="rest" data-delta="-1">−</button><span class="value" id="restVal">10</span><button class="step" data-key="rest" data-delta="1">+</button></div>
+<div class="setting"><div><strong>Runden</strong><small>Anzahl Arbeitssätze</small></div><button class="step" data-key="rounds" data-delta="-1">−</button><span class="value" id="roundsVal">8</span><button class="step" data-key="rounds" data-delta="1">+</button></div>
+<div class="setting"><div><strong>Aufwärmen</strong><small>Sekunden vor dem ersten Satz</small></div><button class="step" data-key="warmup" data-delta="-1">−</button><span class="value" id="warmupVal">5</span><button class="step" data-key="warmup" data-delta="1">+</button></div>
+<div class="total"><span>Gesamtdauer</span><b id="total">04:05</b></div>
+<div class="options"><label for="countdown">Start-Countdown (3 Sekunden)</label><input id="countdown" type="checkbox" checked></div>
+<div class="options"><label for="sound">Akustische Signale</label><input id="sound" type="checkbox" checked></div>
+</div>
+<button id="start" class="primary" style="width:100%">▶ Training starten</button>
+<p class="hint">Die letzten 3 Sekunden jeder Arbeits- und Pausenphase werden heruntergezählt. Am Rundenende ertönt ein eigenes Signal.</p>
+</section>
+<section id="running" class="hidden"><div class="panel timer"><div id="phase" class="phase">TRAINING</div><div class="ring" id="ring"><div class="clock" id="clock">00:20<small>VERBLEIBEND</small></div></div><div class="meta"><span id="roundLabel">Runde 1 von 8</span><span id="nextLabel">Als Nächstes: Pause</span></div><div class="status"><span class="dot"></span><span id="wakeStatus">Display-Wachhalten aktivieren …</span></div></div>
+<div class="controls"><button id="reset" class="secondary" aria-label="Zurücksetzen">↺</button><button id="pause" class="primary">Ⅱ Pause</button></div>
+<p class="hint">Spotify kann im Hintergrund weiterlaufen. Lass den Timer im Vordergrund geöffnet; iOS kann den Wake Lock bei App-Wechseln aufheben. Beim Zurückkehren wird er erneut angefordert.</p></section>
+<section id="done" class="hidden"><div class="panel timer"><div class="phase" style="color:var(--cyan)">GESCHAFFT!</div><div style="font-size:64px;margin:25px">✓</div><h2>Training beendet</h2><p class="hint">Starke Leistung. Zeit für eine Erholung.</p></div><button id="again" class="primary" style="width:100%">Neues Training einstellen</button></section>
+<footer>Lokale Web-App · Keine Anmeldung · Keine Werbung</footer></main>
+<script>
+(()=> {
+const defaults={work:20,rest:10,rounds:8,warmup:5};
+let cfg={...defaults},phase='ready',round=1,deadline=0,remaining=0,paused=false,interval=null,lastBeep=-1,audio=null,wakeLock=null,runToken=0;
+const $=id=>document.getElementById(id);
+const colors={warmup:'#b69cff',countdown:'#b69cff',work:'#78e08f',rest:'#ffb454',done:'#6dd5ed'};
+const names={warmup:'AUFWÄRMEN',work:'TRAINING',rest:'PAUSE'};
+const limits={work:[1,600],rest:[0,600],rounds:[1,99],warmup:[0,300]};
+function save(){try{localStorage.setItem('tabata-settings',JSON.stringify(cfg))}catch(e){}}
+function load(){try{cfg={...defaults,...JSON.parse(localStorage.getItem('tabata-settings')||'{}')}}catch(e){}}
+function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function total(){return cfg.work*cfg.rounds+cfg.rest*Math.max(0,cfg.rounds-1)+cfg.warmup}
+function renderSettings(){for(const k of Object.keys(cfg))$(k+'Val').textContent=cfg[k];$('total').textContent=fmt(total());save()}
+function show(which){['setup','running','done'].forEach(x=>$(x).classList.toggle('hidden',x!==which))}
+function ensureAudio(){try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume()}catch(e){}}
+function tone(freq=740,duration=.09,delay=0){if(!$('sound').checked)return;try{ensureAudio();if(!audio)return;const t=audio.currentTime+delay,o=audio.createOscillator(),g=audio.createGain();o.frequency.value=freq;o.type='sine';g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.12,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+duration);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+duration+.015)}catch(e){}}
+function cue(p){if(p==='work'){tone(880,.12);tone(1100,.12,.13)}else if(p==='rest')tone(520,.16);else if(p==='warmup'||p==='countdown')tone(660,.10);else if(p==='roundEnd'){tone(990,.10);tone(1320,.14,.14)}else if(p==='done'){tone(880,.16);tone(1100,.16,.18);tone(1320,.22,.38)}}
+function beepRemaining(n){if(n===3)tone(660,.075);else if(n===2)tone(740,.075);else if(n===1)tone(880,.12)}
+function setPhase(p,seconds){phase=p;remaining=seconds;deadline=Date.now()+seconds*1000;lastBeep=-1;cue(p);draw()}
+async function requestWakeLock(){if(!('wakeLock'in navigator)){$('wakeStatus').textContent='Display-Wachhalten nicht verfügbar';return}try{wakeLock=await navigator.wakeLock.request('screen');$('wakeStatus').textContent='Display bleibt während des Trainings an';wakeLock.addEventListener('release',()=>{if(phase!=='ready'&&phase!=='done')$('wakeStatus').textContent='Display-Sperre freigegeben – wird erneut versucht'})}catch(e){$('wakeStatus').textContent='Bitte iPhone-Energiesparmodus / Berechtigung prüfen'}}
+async function releaseWakeLock(){try{if(wakeLock){await wakeLock.release();wakeLock=null}}catch(e){}}
+function start(){runToken++;ensureAudio();show('running');round=1;paused=false;requestWakeLock();if($('countdown').checked)setPhase('countdown',3);else if(cfg.warmup>0)setPhase('warmup',cfg.warmup);else setPhase('work',cfg.work);clearInterval(interval);interval=setInterval(tick,80)}
+function tick(){if(paused)return;remaining=Math.max(0,(deadline-Date.now())/1000);const n=Math.ceil(remaining);if(n!==lastBeep){lastBeep=n;if((phase==='work'||phase==='rest')&&n>0&&n<=3)beepRemaining(n)}draw();if(remaining<=0)advance()}
+function advance(){
+if(phase==='countdown'){if(cfg.warmup>0)setPhase('warmup',cfg.warmup);else setPhase('work',cfg.work)}
+else if(phase==='warmup')setPhase('work',cfg.work);
+else if(phase==='work'){
+ if(round>=cfg.rounds){cue('roundEnd');finish();return}
+ if(cfg.rest>0)setPhase('rest',cfg.rest);
+ else {cue('roundEnd');round++;setPhase('work',cfg.work)}
+}
+else if(phase==='rest'){
+ cue('roundEnd');
+ round++;setPhase('work',cfg.work);
+}}
+function draw(){const label=phase==='countdown'?'STARTET IN':(names[phase]||'TRAINING');$('phase').textContent=label;$('phase').style.color=colors[phase]||colors.work;$('ring').style.setProperty('--accent',colors[phase]||colors.work);const duration=phase==='work'?cfg.work:phase==='rest'?cfg.rest:phase==='warmup'?cfg.warmup:3;$('ring').style.setProperty('--progress',((duration?remaining/duration:0)*100)+'%');$('clock').innerHTML=fmt(remaining)+'<small>VERBLEIBEND</small>';$('roundLabel').textContent='Runde '+round+' von '+cfg.rounds;$('nextLabel').textContent=phase==='work'?(round===cfg.rounds?'Als Nächstes: Ende':'Als Nächstes: Pause'):phase==='rest'?'Als Nächstes: Training':'Als Nächstes: Training';$('pause').textContent=paused?'▶ Weiter':'Ⅱ Pause'}
+function finish(){clearInterval(interval);phase='done';cue('done');releaseWakeLock();show('done')}
+function reset(){clearInterval(interval);phase='ready';paused=false;releaseWakeLock();show('setup')}
+document.querySelectorAll('.step').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.key,d=Number(b.dataset.delta),[lo,hi]=limits[k];cfg[k]=Math.max(lo,Math.min(hi,cfg[k]+d));renderSettings()}));
+$('start').onclick=start;$('reset').onclick=reset;$('again').onclick=reset;
+$('pause').onclick=()=>{if(!paused){remaining=Math.max(0,(deadline-Date.now())/1000);paused=true;clearInterval(interval);releaseWakeLock()}else{paused=false;deadline=Date.now()+remaining*1000;requestWakeLock();interval=setInterval(tick,80)}draw()};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&phase!=='ready'&&phase!=='done'&&!paused)requestWakeLock()});
+window.addEventListener('pagehide',()=>{if(interval)clearInterval(interval)});
+load();renderSettings();
+if('serviceWorker'in navigator&&location.protocol!=='file:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+})();
+</script>
+</body></html>
