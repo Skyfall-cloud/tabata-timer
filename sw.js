@@ -43,9 +43,7 @@ self.addEventListener('fetch', event => {
     request.method !== 'GET' ||
     url.origin !== self.location.origin ||
     !url.href.startsWith(self.registration.scope)
-  ) {
-    return;
-  }
+  ) return;
 
   event.respondWith(
     (async () => {
@@ -60,7 +58,6 @@ self.addEventListener('fetch', event => {
         return response;
       } catch (error) {
         const cached = await caches.match(request);
-
         if (cached) return cached;
 
         if (request.mode === 'navigate') {
